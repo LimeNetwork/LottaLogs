@@ -25,7 +25,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import com.daki.lottalogs.LottaLogs;
 import com.daki.lottalogs.logs.Log;
 import okhttp3.MediaType;
@@ -48,29 +47,26 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
+        Bukkit.getAsyncScheduler().runNow(LottaLogs.getInstance(), task -> {
+            try {
 
-                    if (args[0].equals("normal")) {
-                        normalSearch(sender, args);
-                        return;
-                    }
-                    if (args[0].equals("special")) {
-                        specialSearch(sender, args);
-                        return;
-                    }
-                    if (args[0].equals("additional")) {
-                        additionalSearch(sender, args);
-                        return;
-                    }
-
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                if (args[0].equals("normal")) {
+                    normalSearch(sender, args);
+                    return;
                 }
+                if (args[0].equals("special")) {
+                    specialSearch(sender, args);
+                    return;
+                }
+                if (args[0].equals("additional")) {
+                    additionalSearch(sender, args);
+                    return;
+                }
+
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
             }
-        }.runTaskAsynchronously(LottaLogs.getInstance());
+        });
 
         return true;
 

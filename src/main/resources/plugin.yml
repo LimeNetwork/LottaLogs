@@ -10,3 +10,4 @@ commands:
     permission: lottalogs.reload
   searchlogs:
     permission: lottalogs.searchlogs
+folia-supported: true

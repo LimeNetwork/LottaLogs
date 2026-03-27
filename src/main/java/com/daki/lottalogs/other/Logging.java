@@ -1,37 +1,30 @@
 package com.daki.lottalogs.other;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.reflections.Reflections;
 import com.daki.lottalogs.LottaLogs;
 import com.daki.lottalogs.logs.Log;
 import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.reflections.Reflections;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Logging {
 
-    private static int cachedDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-
     private static final ConcurrentLinkedQueue<Log> logQueue = new ConcurrentLinkedQueue<>();
-
-    private static volatile boolean isWritingLogs = false;
-
-    private static boolean isCompressing = false;
-
     @Getter
     private static final HashMap<String, Log> cachedLogs = new HashMap<>();
+    private static int cachedDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+    private static volatile boolean isWritingLogs = false;
+    private static boolean isCompressing = false;
 
     public static void initiate() {
 
-        for (String directory : new String[] {"logs", "compressed-logs", "search-output", "temporary-files"})
+        for (String directory : new String[]{"logs", "compressed-logs", "search-output", "temporary-files"})
             new File(LottaLogs.getInstance().getDataFolder() + File.separator + directory).mkdir();
 
         cacheLogs();
@@ -55,7 +48,7 @@ public class Logging {
         for (Class<? extends Log> log : new Reflections("com.daki.lottalogs.logs").getSubTypesOf(Log.class)) {
             try {
 
-                Log logTemp = log.getDeclaredConstructor(String[].class).newInstance((Object) new String[] {});
+                Log logTemp = log.getDeclaredConstructor(String[].class).newInstance((Object) new String[]{});
                 logs.put(logTemp.getName(), logTemp);
 
             } catch (Throwable throwable) {
@@ -94,10 +87,10 @@ public class Logging {
     }
 
     /**
-     * 
+     *
      * @param mode "all" to create blank files for all logs, "enabled" to create blank files only for
-     *        the enabled logs, "none" don't create blank files and let the plugin create them as they
-     *        are written to
+     *             the enabled logs, "none" don't create blank files and let the plugin create them as they
+     *             are written to
      */
     public static void createBlankLogFiles(String mode) {
 
@@ -114,35 +107,32 @@ public class Logging {
     }
 
     private static void startDateCheck() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
+        Bukkit.getAsyncScheduler().runAtFixedRate(LottaLogs.getInstance(), task -> {
+            try {
 
-                    if (isCompressing)
-                        return;
+                if (isCompressing)
+                    return;
 
-                    int dayNow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+                int dayNow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
-                    if (cachedDayOfWeek == dayNow)
-                        return;
+                if (cachedDayOfWeek == dayNow)
+                    return;
 
-                    isCompressing = true;
+                isCompressing = true;
 
-                    checkAndCompress();
-                    checkAndDeleteOld();
-                    createBlankLogFiles(LottaLogs.getInstance().getConfig().getString("Logging.CreatingBlankFiles"));
+                checkAndCompress();
+                checkAndDeleteOld();
+                createBlankLogFiles(LottaLogs.getInstance().getConfig().getString("Logging.CreatingBlankFiles"));
 
-                    cachedDayOfWeek = dayNow;
+                cachedDayOfWeek = dayNow;
 
-                    isCompressing = false;
+                isCompressing = false;
 
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                    isCompressing = false;
-                }
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+                isCompressing = false;
             }
-        }.runTaskTimerAsynchronously(LottaLogs.getInstance(), 0, 20);
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     /**
@@ -236,26 +226,23 @@ public class Logging {
     }
 
     private static void initializeLogWriting() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
+        Bukkit.getAsyncScheduler().runAtFixedRate(LottaLogs.getInstance(), task -> {
+            try {
 
-                    if (isWritingLogs)
-                        return;
+                if (isWritingLogs)
+                    return;
 
-                    isWritingLogs = true;
+                isWritingLogs = true;
 
-                    while (logQueue.peek() != null)
-                        writeToFile(logQueue.poll());
+                while (logQueue.peek() != null)
+                    writeToFile(logQueue.poll());
 
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                } finally {
-                    isWritingLogs = false;
-                }
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            } finally {
+                isWritingLogs = false;
             }
-        }.runTaskTimerAsynchronously(LottaLogs.getInstance(), 0, 1);
+        }, 0, 50, TimeUnit.MILLISECONDS);
     }
 
     public static void addToLogWriteQueue(Log log) {
