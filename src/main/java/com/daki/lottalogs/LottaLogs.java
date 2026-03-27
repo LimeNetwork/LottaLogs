@@ -1,5 +1,6 @@
 package com.daki.lottalogs;
 
+import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.daki.lottalogs.other.APIs;
 import com.daki.lottalogs.other.Config;
@@ -9,13 +10,8 @@ import com.daki.lottalogs.other.Register;
 
 public class LottaLogs extends JavaPlugin {
 
+    @Getter
     private static LottaLogs instance;
-
-    public static LottaLogs getInstance() {
-
-        return instance;
-
-    }
 
     @Override
     public void onLoad() {

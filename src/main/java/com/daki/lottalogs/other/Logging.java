@@ -14,7 +14,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.reflections.Reflections;
 import com.daki.lottalogs.LottaLogs;
 import com.daki.lottalogs.logs.Log;
-import com.daki.lottalogs.logs.PlayerLocationLog;
 import lombok.Getter;
 
 public class Logging {
@@ -44,9 +43,6 @@ public class Logging {
         startDateCheck();
 
         initializeLogWriting();
-
-        PlayerLocationLog.startPlayerLocationLog(LottaLogs.getInstance().getConfig().getInt("Logging.PlayerLocationLog.WriteFrequencySeconds"));
-
     }
 
     /**

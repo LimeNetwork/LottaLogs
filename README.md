@@ -108,7 +108,6 @@ Examples:
 ```
 /searchlogs special DroppedItemsLog 3 User: Player1 Item: diamond -radius: 50
 /searchlogs special GriefPreventionClaimsCreatedLog 100 User: Player1
-/searchlogs special CrazyCratesCratePrizesLog 14 User: Player1 Items: bow Crate: supercrate
 /searchlogs special DroppedItemsLog,PickedUpItemsLog 7 User: Player1 Time: Sep 20
 ```
 
@@ -116,7 +115,6 @@ Examples:
 
 * ChatWithLocationLog - chat messages that players send and their location
 * CommandsWithLocationLog - commands that players send and their location
-* CrazyCratesCratePrizesLog - crate prizes from the CrazyCrates plugin
 * DroppedItemsLog - items that players drop
 * DroppedItemsOnDeathLog - items that players drop when they different
 * EggsThrownLog - players throwing eggs
@@ -135,7 +133,6 @@ Examples:
 * LightningStrikesLog - lightning strikes
 * MCMMORepairUseLog - items that players right click while looking at an iron block
 * MinecartsDestroyedLog - minecarts that get destroyed
-* MyPetItemPickupLog - pets from the mypet plugin picking up items
 * PickedUpItemsLog- items that players pick up
 * PlayerLocationLog - all of the player's locations every X seconds
 * TridentsLog - players throwing, picking up or hitting something with a trident
