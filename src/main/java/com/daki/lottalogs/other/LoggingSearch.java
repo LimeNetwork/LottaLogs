@@ -2,8 +2,11 @@ package com.daki.lottalogs.other;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,6 +77,25 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
 
     }
 
+    private static BufferedReader createFastReader(File file) throws Throwable {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.defaultCharset()), 65536);
+    }
+
+    private static boolean containsIgnoreCase(String text, String searchText) {
+
+        int searchLength = searchText.length();
+        int maxStartIndex = text.length() - searchLength;
+
+        for (int i = 0; i <= maxStartIndex; i++) {
+            if (text.regionMatches(true, i, searchText, 0, searchLength)) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     static void normalSearch(CommandSender sender, String[] args) {
 
         long startTime = System.currentTimeMillis();
@@ -131,7 +153,7 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
                     stringBuilder.append(args[i]);
 
                 }
-                searchString = stringBuilder.toString().toLowerCase();
+                searchString = stringBuilder.toString();
             }
 
             if (searchString.isEmpty()) {
@@ -142,7 +164,7 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
             Pattern searchPattern = null;
             if (regexSearch) {
                 try {
-                    searchPattern = Pattern.compile(searchString);
+                    searchPattern = Pattern.compile(searchString, Pattern.CASE_INSENSITIVE);
                 } catch (PatternSyntaxException exception) {
                     Methods.sendMessageAndLog(sender, "&cInvalid regex: " + exception.getDescription());
                     return;
@@ -150,6 +172,10 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
             }
 
             List<String> blacklistedStrings = LottaLogs.getInstance().getConfig().getStringList("SearchLogs.NormalSearchBlacklistedStrings");
+            List<Pattern> blacklistedPatterns = new ArrayList<>();
+            for (String blacklistedString : blacklistedStrings) {
+                blacklistedPatterns.add(Pattern.compile(blacklistedString, Pattern.CASE_INSENSITIVE));
+            }
 
             List<File> filesToRead = new ArrayList<>(Arrays.asList(new File(new File("").getAbsolutePath() + File.separator + "logs" + File.separator).listFiles()));
 
@@ -235,33 +261,25 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
 
                         file = new File(outputPath);
 
-                    } else {
-
-                        Methods.copyPasteFile(new File(file.getAbsolutePath()), new File(temporaryFilesDirectory + File.separator + file.getName()));
-
-                        file = new File(temporaryFilesDirectory + File.separator + file.getName());
-
                     }
 
-                    BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+                    BufferedReader bufferedReader = file.getName().contains(".gz") ? new BufferedReader(new FileReader(file), 65536) : createFastReader(file);
                     String line;
 
                     lineReader: while ((line = bufferedReader.readLine()) != null) {
 
-                        String lowerCaseLine = line.toLowerCase();
-
                         boolean matchesSearch;
                         if (regexSearch) {
-                            matchesSearch = searchPattern.matcher(lowerCaseLine).find();
+                            matchesSearch = searchPattern.matcher(line).find();
                         } else {
-                            matchesSearch = lowerCaseLine.contains(searchString);
+                            matchesSearch = containsIgnoreCase(line, searchString);
                         }
 
                         if (!matchesSearch)
                             continue lineReader;
 
-                        for (String blacklistedString : blacklistedStrings) {
-                            if (lowerCaseLine.matches("(.*)" + blacklistedString + "(.*)")) {
+                        for (Pattern blacklistedPattern : blacklistedPatterns) {
+                            if (blacklistedPattern.matcher(line).find()) {
                                 writer.write(file.getName() + ":" + "This line contained a blacklisted string. Skipping it." + "\n");
                                 continue lineReader;
                             }
@@ -273,7 +291,9 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
 
                     bufferedReader.close();
 
-                    file.delete();
+                    if (file.getAbsolutePath().startsWith(temporaryFilesDirectory.getAbsolutePath())) {
+                        file.delete();
+                    }
 
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
