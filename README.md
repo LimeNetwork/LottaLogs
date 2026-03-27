@@ -64,11 +64,11 @@ Other config options:
 
 This command allows you to search the server's (normal), this plugin's (special) or any other plugin's (additional) logs. It creates a result file that gets sent to the Discord channel if a Webhook URL is provided in the config. If a webhook is configured but you don't want that particular search to get sent add `-silent` to the command (works for all searches).  
 Using Notepad++ for reading the result file is recommended, as well as CTRL+F. If a result file gets compressed (.gz) because of it's size, you can use any compression software (7-Zip, WinZip, WinRAR) to uncompress it.  
-All searches support the use of regular expressions. The number argument in all searches represents the number of days to search for, 0 means today (midnight local time to now), 1 means yesterday and today and so on.
+Special and additional searches support the use of regular expressions. Normal search does a literal text match by default and supports regex when `--regex` is added. The number argument in all searches represents the number of days to search for, 0 means today (midnight local time to now), 1 means yesterday and today and so on.
 
 ## searchlogs normal
 
-`/searchlogs normal <numberOfDays> <searchString>`
+`/searchlogs normal <numberOfDays> <searchString> [--regex]`
 
 To search through the server's log use this command.
 
@@ -78,18 +78,14 @@ Some examples of how to use it (these examples depend on the setup of your serve
 To get everything about a player:
 /searchlogs normal 7 Player1
 
-To get all commands that a player has used:
-/searchlogs normal 7 Player1.*command
-
-To get all chat messages tha a player has sent:
-/searchlogs normal 7 chat.*Player1
-
-A specific command that a player has used (this case /tpa):
-/searchlogs normal 7 Player1.*/tpa
+To search with regex, add --regex:
+/searchlogs normal 7 Player1.*command --regex
+/searchlogs normal 7 chat.*Player1 --regex
+/searchlogs normal 7 Player1.*/tpa --regex
 
 Regex allows us to search for multiple players and multiple commands at the same time:
-/searchlogs normal 7 (Player1|Player2|Player3).*(/command1|/command2|/command3)
-/searchlogs normal 7 chat.*(Player1|Player2|Player3)
+/searchlogs normal 7 (Player1|Player2|Player3).*(/command1|/command2|/command3) --regex
+/searchlogs normal 7 chat.*(Player1|Player2|Player3) --regex
 ```
 
 ## searchlogs special

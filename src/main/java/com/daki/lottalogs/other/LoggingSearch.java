@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -90,7 +92,7 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
         try {
 
             if (args.length < 3) {
-                Methods.sendMessageAndLog(sender, "&cUsage of this command is /searchlogs normal <numberOfDays> <searchString>.");
+                Methods.sendMessageAndLog(sender, "&cUsage of this command is /searchlogs normal <numberOfDays> <searchString> [--regex].");
                 return;
             }
 
@@ -98,17 +100,19 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
             try {
                 days = Integer.parseInt(args[1]);
             } catch (Throwable throwable) {
-                Methods.sendMessageAndLog(sender, "&cUsage of this command is /searchlogs normal <numberOfDays> <searchString>.");
+                Methods.sendMessageAndLog(sender, "&cUsage of this command is /searchlogs normal <numberOfDays> <searchString> [--regex].");
                 return;
             }
 
             Methods.sendMessageAndLog(sender, "&6Search started.");
 
             boolean silent = false;
+            boolean regexSearch = false;
             for (String arg : args) {
                 if (arg.equals("-silent")) {
                     silent = true;
-                    break;
+                } else if (arg.equals("--regex")) {
+                    regexSearch = true;
                 }
             }
 
@@ -128,6 +132,21 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
 
                 }
                 searchString = stringBuilder.toString().toLowerCase();
+            }
+
+            if (searchString.isEmpty()) {
+                Methods.sendMessageAndLog(sender, "&cUsage of this command is /searchlogs normal <numberOfDays> <searchString> [--regex].");
+                return;
+            }
+
+            Pattern searchPattern = null;
+            if (regexSearch) {
+                try {
+                    searchPattern = Pattern.compile(searchString);
+                } catch (PatternSyntaxException exception) {
+                    Methods.sendMessageAndLog(sender, "&cInvalid regex: " + exception.getDescription());
+                    return;
+                }
             }
 
             List<String> blacklistedStrings = LottaLogs.getInstance().getConfig().getStringList("SearchLogs.NormalSearchBlacklistedStrings");
@@ -229,11 +248,20 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
 
                     lineReader: while ((line = bufferedReader.readLine()) != null) {
 
-                        if (!line.toLowerCase().matches("(.*)" + searchString + "(.*)"))
+                        String lowerCaseLine = line.toLowerCase();
+
+                        boolean matchesSearch;
+                        if (regexSearch) {
+                            matchesSearch = searchPattern.matcher(lowerCaseLine).find();
+                        } else {
+                            matchesSearch = lowerCaseLine.contains(searchString);
+                        }
+
+                        if (!matchesSearch)
                             continue lineReader;
 
                         for (String blacklistedString : blacklistedStrings) {
-                            if (line.toLowerCase().matches("(.*)" + blacklistedString + "(.*)")) {
+                            if (lowerCaseLine.matches("(.*)" + blacklistedString + "(.*)")) {
                                 writer.write(file.getName() + ":" + "This line contained a blacklisted string. Skipping it." + "\n");
                                 continue lineReader;
                             }
@@ -1108,6 +1136,24 @@ public class LoggingSearch implements CommandExecutor, TabCompleter {
                 }
 
                 return completions;
+
+            }
+
+            if (sender.hasPermission("lottalogs.searchlogs.normal") && args.length > 2 && args[0].equals("normal")) {
+
+                String lastArgument = args[args.length - 1].toLowerCase();
+                List<String> choices = Arrays.asList("--regex", "-silent");
+                List<String> completions = new ArrayList<>();
+
+                for (String choice : choices) {
+                    if (choice.startsWith(lastArgument) && !Arrays.asList(args).contains(choice)) {
+                        completions.add(choice);
+                    }
+                }
+
+                if (!completions.isEmpty()) {
+                    return completions;
+                }
 
             }
 

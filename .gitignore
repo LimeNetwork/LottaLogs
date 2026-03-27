@@ -145,4 +145,6 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+.gradle-local
+
 LottaLogs.iml
