@@ -176,7 +176,7 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
         }
 
         String fileName = path.getFileName().toString();
-        if (fileName.endsWith(GZ_EXT)) {
+        if (fileName.endsWith(GZ_EXT) || fileName.endsWith(".gz")) {
             FileInputStream fis = new FileInputStream(path.toFile());
             try {
                 GZIPInputStream gzis = new GZIPInputStream(fis);
