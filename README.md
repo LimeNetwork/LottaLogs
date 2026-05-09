@@ -143,6 +143,64 @@ Works the same as the normal log search except it searches any additional logs t
 # For Developers
 ## Building the plugin
 
-To build LottaLogs simply clone it and use `mvn package`. You'll encounter an error saying that you are missing system scope dependencies for plugins in the lib directory. If you need these, download them yourself and put them in the directory, if you don't, remove their dependencies, their APIs.java entries and their logs.
+To build LottaLogs simply clone it and run `./gradlew shadowJar` (requires JDK 21). The shaded plugin jar is written to `build/libs/`.
 
 To add a new log simply add it to com.daki.lottalogs.logs and make it extend Log. Copy the format from other logs and you're good to go. Everything else like event registering, config adding, blank file creation, tab completes, searching is done automatically.
+
+## Developer API
+
+LottaLogs exposes a read-only Java API for other plugins to query logs at runtime. The API is registered with Bukkit's `ServicesManager` in `onEnable`.
+
+### Adding LottaLogs as a dependency
+
+```kotlin
+repositories {
+    maven("https://jitpack.io")
+}
+dependencies {
+    compileOnly("com.github.LimeNetwork:LottaLogs:<tag>")
+}
+```
+
+Use a Git tag (e.g. `v1.13`) for a pinned version, or `master-SNAPSHOT` to track the latest commit on master.
+
+In your `plugin.yml`:
+
+```yaml
+softdepend: [LottaLogs]
+```
+
+### Acquiring the API
+
+```java
+import com.daki.lottalogs.api.LottaLogsAPI;
+import com.daki.lottalogs.api.search.SearchQuery;
+import com.daki.lottalogs.api.search.SearchResult;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
+RegisteredServiceProvider<LottaLogsAPI> provider =
+        Bukkit.getServicesManager().getRegistration(LottaLogsAPI.class);
+if (provider == null) {
+    return;
+}
+LottaLogsAPI api = provider.getProvider();
+
+SearchQuery query = SearchQuery.builder("ChatWithLocationLog")
+        .pastDays(7)
+        .pattern("Player1")
+        .maxResults(500)
+        .build();
+
+SearchResult result = api.searchLogs(query);
+```
+
+### Available API methods
+
+* `getEnabledLogNames()` - names of all enabled built-in logs
+* `getAdditionalLogNames()` - names of additional logs configured via `AdditionalLogs`
+* `isLogEnabled(String logName)` - whether a built-in log is enabled
+* `getLogInfo(String logName)` - metadata for a built-in log (enabled flag, retention, blacklist, argument keys)
+* `getAvailableDates(String logName)` - sorted dates with stored log files for that log
+* `searchLogs(SearchQuery query)` - run a NORMAL/SPECIAL/ADDITIONAL search and return matching entries. ADDITIONAL mode searches additional log files configured in `config.yml` under `AdditionalLogs`.
+* `streamLogLines(String logName, LocalDate date)` - raw line stream for one date, transparently decompressing `.gz` files; the caller must close the returned `Stream`

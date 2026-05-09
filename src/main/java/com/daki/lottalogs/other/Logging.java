@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +18,7 @@ public class Logging {
 
     private static final ConcurrentLinkedQueue<Log> logQueue = new ConcurrentLinkedQueue<>();
     @Getter
-    private static final HashMap<String, Log> cachedLogs = new HashMap<>();
+    private static final Map<String, Log> cachedLogs = new ConcurrentHashMap<>();
     private static int cachedDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
     private static volatile boolean isWritingLogs = false;
     private static boolean isCompressing = false;
