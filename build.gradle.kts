@@ -34,7 +34,7 @@ dependencies {
 }
 
 group = "com.daki.lottalogs"
-version = "1.0"
+version = "1.13"
 
 val targetJavaVersion = 21
 java {
