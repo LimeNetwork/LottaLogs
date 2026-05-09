@@ -11,8 +11,9 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -197,14 +198,14 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
         if (isAdditional) {
             File dir = additionalLogDirectory(logName);
             if (dir == null) return null;
-            File[] files = dir.listFiles();
-            if (files == null) return null;
-            for (File f : files) {
-                if (f.getName().startsWith(dateStr)) {
-                    return f.toPath();
-                }
-            }
-            return null;
+            File[] files = dir.listFiles((d, name) -> name.startsWith(dateStr));
+            if (files == null || files.length == 0) return null;
+            return Arrays.stream(files)
+                    .filter(File::isFile)
+                    .sorted(Comparator.comparing(File::getName))
+                    .findFirst()
+                    .map(File::toPath)
+                    .orElse(null);
         }
 
         File dataFolder = LottaLogs.getInstance().getDataFolder();
@@ -312,6 +313,16 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
             LocalDate hi = from.isAfter(to) ? from : to;
             return available.stream()
                     .filter(d -> !d.isBefore(lo) && !d.isAfter(hi))
+                    .collect(Collectors.toList());
+        }
+        if (from != null) {
+            return available.stream()
+                    .filter(d -> !d.isBefore(from))
+                    .collect(Collectors.toList());
+        }
+        if (to != null) {
+            return available.stream()
+                    .filter(d -> !d.isAfter(to))
                     .collect(Collectors.toList());
         }
 
