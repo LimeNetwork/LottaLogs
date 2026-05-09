@@ -230,7 +230,9 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
         String logName = query.getLogName();
         SearchMode mode = query.getMode();
 
-        if (mode == SearchMode.ADDITIONAL && !Logging.getAdditionalLogNames().contains(logName)) {
+        boolean isAdditionalName = Logging.getAdditionalLogNames().contains(logName);
+        boolean isAdditionalMode = (mode == SearchMode.ADDITIONAL);
+        if (isAdditionalMode != isAdditionalName) {
             return new SearchResult(logName, 0, List.of(), false);
         }
 
@@ -380,16 +382,17 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
         if (center == null || radius <= 0) return true;
         String locStr = parsed.get("Location");
         if (locStr == null) return false;
-        Location parsedLoc = parseBetterLocation(locStr);
+        ParsedLogLocation parsedLoc = parseBetterLocation(locStr);
         if (parsedLoc == null) return false;
-        if (parsedLoc.getWorld() == null || center.getWorld() == null) return false;
-        if (!parsedLoc.getWorld().equals(center.getWorld())) return false;
-        double dx = parsedLoc.getX() - center.getX();
-        double dz = parsedLoc.getZ() - center.getZ();
-        return Math.sqrt(dx * dx + dz * dz) <= radius;
+        if (center.getWorld() == null) return false;
+        if (!parsedLoc.worldName().equals(center.getWorld().getName())) return false;
+        double dx = parsedLoc.x() - center.getX();
+        double dz = parsedLoc.z() - center.getZ();
+        double radiusSq = (double) radius * (double) radius;
+        return (dx * dx + dz * dz) <= radiusSq;
     }
 
-    private static Location parseBetterLocation(String value) {
+    private static ParsedLogLocation parseBetterLocation(String value) {
         try {
             String s = value;
             int worldIdx = s.indexOf("World:");
@@ -405,10 +408,12 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
             double x = Double.parseDouble(s.substring(xIdx + 2, yIdx).trim());
             double y = Double.parseDouble(s.substring(yIdx + 2, zIdx).trim());
             double z = Double.parseDouble(s.substring(zIdx + 2).trim());
-            return new Location(org.bukkit.Bukkit.getWorld(worldName), x, y, z);
+            return new ParsedLogLocation(worldName, x, y, z);
         } catch (RuntimeException e) {
             return null;
         }
     }
+
+    private record ParsedLogLocation(String worldName, double x, double y, double z) {}
 
 }

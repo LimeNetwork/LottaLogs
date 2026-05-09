@@ -76,8 +76,27 @@ public final class SearchQuery {
         public Builder dateTo(LocalDate dateTo) { this.dateTo = dateTo; return this; }
         public Builder pattern(String pattern) { this.pattern = pattern; return this; }
         public Builder regex(boolean regex) { this.regex = regex; return this; }
-        public Builder argFilters(Map<String, String> argFilters) { this.argFilters = (argFilters == null) ? new HashMap<>() : new HashMap<>(argFilters); return this; }
-        public Builder addArgFilter(String key, String value) { this.argFilters.put(key, value); return this; }
+        public Builder argFilters(Map<String, String> argFilters) {
+            if (argFilters == null) {
+                this.argFilters = new HashMap<>();
+                return this;
+            }
+            Map<String, String> copy = new HashMap<>(argFilters.size());
+            for (Map.Entry<String, String> e : argFilters.entrySet()) {
+                if (e.getKey() == null || e.getValue() == null) {
+                    throw new IllegalArgumentException("argFilters must not contain null keys or values");
+                }
+                copy.put(e.getKey(), e.getValue());
+            }
+            this.argFilters = copy;
+            return this;
+        }
+        public Builder addArgFilter(String key, String value) {
+            Objects.requireNonNull(key, "argFilter key must not be null");
+            Objects.requireNonNull(value, "argFilter value must not be null");
+            this.argFilters.put(key, value);
+            return this;
+        }
         public Builder centerLocation(Location centerLocation) { this.centerLocation = centerLocation; return this; }
         public Builder radius(int radius) { this.radius = radius; return this; }
         public Builder maxResults(int maxResults) { this.maxResults = maxResults; return this; }
