@@ -202,5 +202,5 @@ SearchResult result = api.searchLogs(query);
 * `isLogEnabled(String logName)` - whether a built-in log is enabled
 * `getLogInfo(String logName)` - metadata for a built-in log (enabled flag, retention, blacklist, argument keys)
 * `getAvailableDates(String logName)` - sorted dates with stored log files for that log
-* `searchLogs(SearchQuery query)` - run a NORMAL/SPECIAL/ADDITIONAL search and return matching entries
+* `searchLogs(SearchQuery query)` - run a NORMAL/SPECIAL/ADDITIONAL search and return matching entries. ADDITIONAL mode searches additional log files configured in `config.yml` under `AdditionalLogs`.
 * `streamLogLines(String logName, LocalDate date)` - raw line stream for one date, transparently decompressing `.gz` files; the caller must close the returned `Stream`

@@ -76,7 +76,7 @@ public final class SearchQuery {
         public Builder dateTo(LocalDate dateTo) { this.dateTo = dateTo; return this; }
         public Builder pattern(String pattern) { this.pattern = pattern; return this; }
         public Builder regex(boolean regex) { this.regex = regex; return this; }
-        public Builder argFilters(Map<String, String> argFilters) { this.argFilters = new HashMap<>(argFilters); return this; }
+        public Builder argFilters(Map<String, String> argFilters) { this.argFilters = (argFilters == null) ? new HashMap<>() : new HashMap<>(argFilters); return this; }
         public Builder addArgFilter(String key, String value) { this.argFilters.put(key, value); return this; }
         public Builder centerLocation(Location centerLocation) { this.centerLocation = centerLocation; return this; }
         public Builder radius(int radius) { this.radius = radius; return this; }
@@ -86,6 +86,15 @@ public final class SearchQuery {
             Objects.requireNonNull(logName, "logName must not be null");
             if (mode == null) {
                 throw new IllegalStateException("mode must not be null");
+            }
+            if (maxResults <= 0) {
+                throw new IllegalArgumentException("maxResults must be > 0 (got " + maxResults + ")");
+            }
+            if (radius < 0) {
+                throw new IllegalArgumentException("radius must be >= 0 (got " + radius + ")");
+            }
+            if (pastDays < -1) {
+                throw new IllegalArgumentException("pastDays must be -1 (unbounded) or >= 0 (got " + pastDays + ")");
             }
             return new SearchQuery(this);
         }

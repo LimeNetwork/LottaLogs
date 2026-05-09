@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -142,7 +143,7 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
         String prefix = fileName.substring(0, 10);
         try {
             return LocalDate.parse(prefix);
-        } catch (Throwable t) {
+        } catch (DateTimeParseException e) {
             return null;
         }
     }
@@ -228,6 +229,10 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
 
         String logName = query.getLogName();
         SearchMode mode = query.getMode();
+
+        if (mode == SearchMode.ADDITIONAL && !Logging.getAdditionalLogNames().contains(logName)) {
+            return new SearchResult(logName, 0, List.of(), false);
+        }
 
         Pattern compiled = null;
         if (query.getPattern() != null && query.isRegex()) {
@@ -337,7 +342,7 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
                 String value = cursor.substring(0, pipe);
                 cursor = cursor.substring(pipe);
                 result.put(key, value);
-            } catch (Throwable t) {
+            } catch (RuntimeException e) {
                 break;
             }
         }
@@ -401,7 +406,7 @@ public final class LottaLogsAPIImpl implements LottaLogsAPI {
             double y = Double.parseDouble(s.substring(yIdx + 2, zIdx).trim());
             double z = Double.parseDouble(s.substring(zIdx + 2).trim());
             return new Location(org.bukkit.Bukkit.getWorld(worldName), x, y, z);
-        } catch (Throwable t) {
+        } catch (RuntimeException e) {
             return null;
         }
     }

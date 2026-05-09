@@ -26,8 +26,10 @@ public interface LottaLogsAPI {
 
     List<LocalDate> getAvailableDates(String logName);
 
+    /** @throws java.util.regex.PatternSyntaxException if query.isRegex() and query.getPattern() is not a valid regex */
     SearchResult searchLogs(SearchQuery query);
 
+    /** Returned stream wraps an open file/reader; caller must close it (e.g. try-with-resources). */
     Stream<String> streamLogLines(String logName, LocalDate date) throws IOException;
 
 }
