@@ -143,7 +143,7 @@ Works the same as the normal log search except it searches any additional logs t
 # For Developers
 ## Building the plugin
 
-To build LottaLogs simply clone it and run `./gradlew shadowJar` (requires JDK 21). The shaded plugin jar is written to `build/libs/`. You'll encounter an error saying that you are missing system scope dependencies for plugins in the lib directory. If you need these, download them yourself and put them in the directory, if you don't, remove their dependencies, their APIs.java entries and their logs.
+To build LottaLogs simply clone it and run `./gradlew shadowJar` (requires JDK 21). The shaded plugin jar is written to `build/libs/`.
 
 To add a new log simply add it to com.daki.lottalogs.logs and make it extend Log. Copy the format from other logs and you're good to go. Everything else like event registering, config adding, blank file creation, tab completes, searching is done automatically.
 
